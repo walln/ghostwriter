@@ -1,1 +1,7 @@
 .venv
+*.bin
+*.txt
+*.json
+__pycache__
+*.pt
+.env
