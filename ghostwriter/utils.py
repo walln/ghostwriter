@@ -1,3 +1,5 @@
+"""General utilities for ghostwriter."""
+
 import random
 
 import numpy as np
@@ -6,14 +8,14 @@ import torch
 
 def set_seed_and_backends(seed: int = 1337):
     """
-    Sets up general utilities and seeds random number generators
+    Set up general utilities and seeds random number generators.
 
     Parameters
     ----------
     seed
         The random number seed
-    """
 
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

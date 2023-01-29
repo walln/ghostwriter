@@ -1,3 +1,4 @@
+"""Trainer utility for the GPT model."""
 import os
 from collections import defaultdict
 from pathlib import Path
@@ -12,7 +13,7 @@ from ghostwriter.models.gpt.model import GPT
 
 class GPTTrainer:
     """
-    Trainer handles the training loop and saving checkpoints of the trained model class
+    Trainer handles the training loop and saving checkpoints of the trained model class.
 
     Parameters
     ----------
@@ -26,6 +27,7 @@ class GPTTrainer:
         The amount of parallel batches to use when training the model
     grad_clip
         The level for gradient clipping
+
     """
 
     def __init__(
@@ -53,7 +55,7 @@ class GPTTrainer:
 
     def fit(self, optimizer: AdamW, train_data, val_data):
         """
-        Fits the model to attempt to predict the next token in a sequence
+        Fits the model to attempt to predict the next token in a sequence.
 
         Parameters
         ----------
@@ -63,6 +65,7 @@ class GPTTrainer:
             The training dataset split
         val_data
             The validation dataset split
+
         """
         model = self.model
         self.optimizer = optimizer
@@ -115,13 +118,13 @@ class GPTTrainer:
 
     def save_model(self, path: str):
         """
-        Save the model's state dictionary to a file
+        Save the model's state dictionary to a file.
 
         Parameters
         ----------
         path
             The path to the directory where the checkpoint should be saved
-        """
 
+        """
         Path(path).mkdir(parents=True, exist_ok=True)
         torch.save(self.model.state_dict(), os.path.join(path, "model.pt"))

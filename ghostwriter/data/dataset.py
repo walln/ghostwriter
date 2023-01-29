@@ -1,3 +1,6 @@
+"""Load an artist's discography as a dataset to train a transfromer."""
+
+
 from typing import Literal
 import tiktoken
 import os
@@ -13,14 +16,15 @@ logger = Logger(__name__, logging.DEBUG)
 
 class GPTCharacterLevelTokenizer:
     """
-    Character level tokenizer with the tiktoken API for encoding and decoding
-    strings. Used for fully training the model from scratch because I cannot be bothered
+    Character level tokenizer with the tiktoken API for encoding and decoding strings.
+    Used for fully training the model from scratch because I cannot be bothered
     to implement byte-pair encoding from scratch.
 
     Parameters
     ----------
     chars
         A sorted list of the set of characters in the training corpus
+
     """
 
     def __init__(self, chars: list):
@@ -31,21 +35,17 @@ class GPTCharacterLevelTokenizer:
         self.itos = {i: ch for i, ch in enumerate(self.chars)}
 
     def encode(self, input: str):
-        """
-        Encode a string to a list of token ids
-        """
+        """Encode a string to a list of token ids."""
         return [self.stoi[char] for char in input]
 
     def decode(self, tokens: list[int]):
-        """
-        Decode a list of token ids to a string
-        """
+        """Decode a list of token ids to a string."""
         return "".join([self.itos[token] for token in tokens])
 
 
 def get_lyrics(data_dir: str) -> str:
     """
-    Gets an artist's entire discography as a single string
+    Get an artist's entire discography as a single string.
     Caches the intermediate processing steps in a folder
     /data/{artist}/...
 
@@ -53,12 +53,13 @@ def get_lyrics(data_dir: str) -> str:
     ----------
     data_dir
         The path to the directory where the data is cached and downloaded
+
     """
     if not os.path.exists(os.path.join(data_dir, "lyrics.txt")):
 
         if not os.path.exists(os.path.join(data_dir, "songs.json")):
             print(os.path.join(data_dir, "songs.json"))
-            logger.info(f"Lyrics cache does not exist, will need to redownload lyrics")
+            logger.info("Lyrics cache does not exist, will need to redownload lyrics")
 
             from lyricsgenius import Genius
             import json
@@ -101,7 +102,7 @@ def create_or_load_dataset(
     artist: str, model: Literal["GPT"], use_pretrained_tokenizer: bool = True
 ):
     """
-    Attempts to load the dataset for a given artist and will download the data if it is not locally available.
+    Attempt to load the dataset for a given artist and download the data if needed.
     Uses model metadata to load and configure a tokenizer for the dataset
 
     Parameters
@@ -110,8 +111,9 @@ def create_or_load_dataset(
         The name of the artist whose discography should be used as the dataset
     model
         The model architecture to use for the tokenizer
-    pretrained
+    use_pretrained_tokenizer
         If the tokenizer should use the pretrained vocabulary
+
     """
     data_dir = os.path.join("ghostwriter", "data", artist)
 

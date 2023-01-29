@@ -1,13 +1,29 @@
+"""Causal Self Attention for Decoder Only Tranformer blocks as outlined in GPT2."""
+
 import math
 
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-from ghostwriter.models.gpt.configs import GPTConfig
-
 
 class GPT2Attention(nn.Module):
+    """
+    GPT2 implementation of decoder only causal self attention.
+
+    Parameters
+    ----------
+    embedding_dimension
+        The size of the embedding dimension
+    num_heads
+        The number of attention heads to use
+    block_size
+        The size of each transformer block
+    dropout_ratio
+        The ratio of weights to dropout during training
+
+    """
+
     def __init__(
         self,
         embedding_dimension: int,
@@ -42,7 +58,20 @@ class GPT2Attention(nn.Module):
             ),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
+        """
+        Forward pass to compute attention for the input tensor.
+
+        Parameters
+        ----------
+        x
+            The input tensor to compute attention for
+
+        Returns
+        -------
+        An output projection for the input tensor.
+
+        """
         (
             B,
             T,
@@ -64,14 +93,16 @@ class GPT2Attention(nn.Module):
 
         # Self attention (causal) requires the positional attention multiplied by
         # queries @ keys (requires shape augmentation)
-        # (Batch Size, Num Heads, Sequence Length, Head Size) x (Batch Size, Num Heads, Head Size, Sequence Length)
+        # (Batch Size, Num Heads, Sequence Length, Head Size) x
+        # (Batch Size, Num Heads, Head Size, Sequence Length)
         # -> (Batch Size, Num Heads, Sequence Length, Sequence Length)
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
         att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float("-inf"))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
 
-        #  (Batch Size, Num Heads, Sequence Length, Sequence Length) X  (Batch Size, Num Heads, Sequence Length, Head Size)
+        #  (Batch Size, Num Heads, Sequence Length, Sequence Length) X
+        # (Batch Size, Num Heads, Sequence Length, Head Size)
         # -> (Batch Size, Num Heads, Sequence Length, Head Size)
         y = att @ v
 

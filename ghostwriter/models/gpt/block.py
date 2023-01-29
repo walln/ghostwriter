@@ -1,3 +1,5 @@
+"""GPT2 Tranformer decoder block as outlined by OpenAI."""
+
 import torch.nn as nn
 from torch import Tensor
 
@@ -6,6 +8,22 @@ from ghostwriter.models.gpt.mlp import GPT2MLP
 
 
 class GPT2TransformerBlock(nn.Module):
+    """
+    GPT decoder transformer block as outlined by OpenAI.
+
+    Parameters
+    ----------
+    embedding_dimension
+        The size of the embedding dimension
+    num_heads
+        The number of attention heads to use
+    block_size
+        The size of each transformer block
+    dropout_ratio
+        The ratio of weights to dropout during training
+
+    """
+
     def __init__(
         self,
         embedding_dimension: int,
@@ -31,6 +49,19 @@ class GPT2TransformerBlock(nn.Module):
         self.mlp = GPT2MLP(self.embedding_dimension, self.dropout_ratio)
 
     def forward(self, x: Tensor):
+        """
+        Forward pass for the transformer decoder block.
+
+        Parameters
+        ----------
+        x
+            Input tensor
+
+        Returns
+        -------
+        The result of the forward pass through the decoder block.
+
+        """
         pre_norm = self.ln_1(x)
         x = x + self.attn(pre_norm)
         post_norm = self.ln_2(x)

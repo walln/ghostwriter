@@ -1,3 +1,4 @@
+"""Configuration for using the GPT architecture."""
 from dataclasses import dataclass
 from typing import Optional
 
@@ -7,6 +8,8 @@ PRETRAINED_DEFAULT_VOCAB_SIZE = 50257
 
 @dataclass
 class GPTConfig:
+    """Configuration options for the GPT model."""
+
     block_size: int = PRETRAINED_DEFAULT_BLOCK_SIZE
     vocab_size: int = PRETRAINED_DEFAULT_VOCAB_SIZE
     n_layer: int = 12
@@ -17,6 +20,8 @@ class GPTConfig:
 
 @dataclass
 class GPTGenerationConfig:
+    """Configuration options for generating text with the GPT model."""
+
     max_new_tokens: int = 100
     temperature: int = 0.8
     top_k: int = 200
@@ -70,21 +75,38 @@ PRETRAINED_CONFIGS = dict(
 )
 
 
-def get_gpt_config_from_arg(config_name: str) -> GPTConfig:
-    if config_name not in GPT_CONFIGS:
-        raise ValueError("Invalid config for GPT model")
-    return GPT_CONFIGS[config_name]
+# def get_gpt_config_from_arg(config_name: str) -> GPTConfig:
+#     """
+#     Get the
+#     """
+#     if config_name not in GPT_CONFIGS:
+#         raise ValueError("Invalid config for GPT model")
+#     return GPT_CONFIGS[config_name]
 
 
 def get_config(pretrained: bool = True, config_name: Optional[str] = None):
+    """
+    Get the config for a given set of arguments to instantiate a GPT model.
+
+    Parameters
+    ----------
+    pretrained
+        Whether to use pretrained weights
+    config_name
+        The name of the GPTConfig to use
+
+    Returns
+    -------
+    Returns an instance of a GPTConfig based on the input arguments.
+
+    """
     if pretrained:
         if config_name is None:
             return PRETRAINED_CONFIGS["gpt2"]
 
         if config_name is not None and config_name not in PRETRAINED_CONFIGS.keys():
-            raise ValueError(
-                f"No pretrained config exists for this name.\n Options are: {PRETRAINED_CONFIGS.keys()}"
-            )
+            keys = PRETRAINED_CONFIGS.keys()
+            raise ValueError(f"No pretrained config matches. Options are: {keys}")
         else:
             return PRETRAINED_CONFIGS[config_name]
 

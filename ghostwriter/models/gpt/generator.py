@@ -1,3 +1,5 @@
+"""GPT Model generation utilities."""
+
 from contextlib import nullcontext
 
 import torch
@@ -8,8 +10,7 @@ from ghostwriter.models.gpt.model import GPT
 
 class GPTGenerator:
     """
-    Generator utility class to handle encoding and decoding inputs and outputs,
-    as well as managing evaluation state, model devices and and autograd context
+    Generator utility class to handle encoding and autograd context.
 
     Parameters
     ----------
@@ -19,6 +20,7 @@ class GPTGenerator:
         The tokenizer instance to encode and decode tokens
     device
         The device to use for the model
+
     """
 
     def __init__(self, model: GPT, tokenizer, device: str = "auto"):
@@ -36,7 +38,7 @@ class GPTGenerator:
 
     def generate(self, input: str, generation_config: GPTGenerationConfig) -> str:
         """
-        Encode an input string and use model.generate() to complete the input
+        Encode an input string and use model.generate() to complete the input.
 
         Parameters
         ----------
@@ -48,6 +50,7 @@ class GPTGenerator:
         Returns
         -------
         A string including the input and the predicted sequence of tokens
+
         """
         with torch.no_grad():
             ctx = (

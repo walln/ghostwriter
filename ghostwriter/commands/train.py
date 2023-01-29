@@ -1,3 +1,5 @@
+"""CLI command to train a model."""
+
 import os
 from typing import Literal, Optional
 
@@ -89,6 +91,33 @@ def train(
     max_iters: int,
     clip_block_size: Optional[int],
 ):
+    """
+    CLI Command to train a model.
+
+    Parameters
+    ----------
+    artist
+        The artist to use as a dataset
+    model
+        The model architecture to use
+    pretrained
+        If pretrained weights should be used
+    config
+        The model config to use
+    batch_size
+        The batch size to use during training
+    grad_clip
+        The gradient clipping value to use
+    learning_rate
+        The eta size to use for AdamW
+    weight_decay
+        The amount to decay weights during training
+    max_iters
+        The maximum number of iterations to train the model for
+    clip_block_size
+        The size of the block to shrink to if needed
+
+    """
     beta1 = 0.9
     beta2 = 0.95
 

@@ -1,3 +1,4 @@
+"""CLI command to generate text using a trained model."""
 import os
 from typing import Literal, Optional
 
@@ -57,6 +58,23 @@ def generate(
     config: Optional[str],
     clip_block_size: Optional[int],
 ):
+    """
+    CLI Command to generate text using a trained model.
+
+    Parameters
+    ----------
+    artist
+        The artist to use as a dataset
+    model
+        The model architecture to use
+    pretrained
+        If pretrained weights should be used
+    config
+        The model config to use
+    clip_block_size
+        The size of the block to shrink to if needed
+
+    """
     checkpoints_dir = os.path.join("checkpoints", model)
     if model == "gpt":
         path = os.path.join(

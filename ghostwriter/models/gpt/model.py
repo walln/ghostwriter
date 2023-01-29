@@ -1,7 +1,11 @@
 """
-GPT2 Language Model using references from:
+GPT2 Language Model implemented according to OpenAI specifications.
+
+References
+----------
 https://github.com/openai/gpt-2/
 https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt2
+
 """
 
 
@@ -26,6 +30,16 @@ logger = Logger(__name__, logging.DEBUG)
 
 
 class GPT(nn.Module):
+    """
+    An implementation of GPT model according to the specifications of GPT2.
+
+    Parameters
+    ----------
+    config
+        A GPTConfig with the model arguments
+
+    """
+
     def __init__(self, config: GPTConfig):
         super().__init__()
 
@@ -36,7 +50,8 @@ class GPT(nn.Module):
         self.dropout_ratio = config.dropout
         self.num_layers = config.n_layer
 
-        # Layer names need to match original implementation to enable loading existing weights
+        # Layer names need to match original implementation to enable
+        # loading existing weights
         # Transformer body is composed of token and positional embeddings
         # dropout and a sequence of transformer blocks (decoder only in this case)
         self.transformer = nn.ModuleDict(
@@ -63,13 +78,22 @@ class GPT(nn.Module):
 
     @property
     def parameter_count(self):
+        """
+        Return the number of trainable parameters in the model.
+
+        Returns
+        -------
+        The number of trainable parameters in the model.
+
+        """
         return sum(p.numel() for p in self.parameters())
 
     def forward(
         self, sequence: LongTensor, ground_truth: Optional[Tensor] = None
     ) -> Tuple[Tensor, Tensor]:
         """
-        Forward pass for the model - takes a sequence and outputs the logits of the next token
+        Forward pass for the model.
+        Takes a sequence and outputs the logits of the next token.
 
         Parameters
         ----------
@@ -81,12 +105,14 @@ class GPT(nn.Module):
         Returns
         -------
         Returns a Tuple[Tensor, Tensor] containing the logits and optionally the loss
+
         """
         _, sequence_length = sequence.size()
 
         assert (
             sequence_length <= self.block_size
-        ), f"Cannot forward sequence of length {sequence_length}, block size is only {self.block_size}"
+        ), f"Sequence length {sequence_length}, \
+        not compatable with block size: {self.block_size}"
 
         positions = torch.arange(
             0, sequence_length, dtype=torch.long, device=sequence.device
@@ -120,8 +146,7 @@ class GPT(nn.Module):
         self, sequence: LongTensor, generation_config: GPTGenerationConfig
     ) -> LongTensor:
         """
-        Complete a sequence using a conditioning of indicies by continually feeding the results
-        from the previous prediction into the model for the next prediction.
+        Complete a sequence using a conditioning of indicies autoregressively.
 
         Parameters
         ----------
@@ -171,28 +196,24 @@ class GPT(nn.Module):
         self, weight_decay: float, learning_rate: float, betas: Tuple[float, float]
     ):
         """
-        This long function is unfortunately doing something very simple and is being very defensive:
-        We are separating out all parameters of the model into two buckets: those that will experience
-        weight decay for regularization and those that won't (biases, and layernorm/embedding weights).
-        We are then returning the PyTorch optimizer object.
-
-        Only certain layers need to experience weight decay so some configuration is needed with parameter
-        groups for AdamW.
+        Separate decayable weights and return an optimizer.
+        Only certain layers need to experience weight decay so some configuration
+        is needed with parametergroups for AdamW.
 
         Parameters
         ----------
         weight_decay
             The rate to decay the weights
         learning_rate
-            The step size to modify the weights as the optimizer updates the backwards pass
+            The step size to modify the weights during the backwards pass
         betas
             Coefficients used for computing running averages of gradient and its square
 
         Returns
         -------
-        An instance of the AdamW optimizer configured correctly for weight decay
-        """
+        An instance of the AdamW optimizer configured correctly for weight decay.
 
+        """
         layers_with_decay = set()
         layers_without_decay = set()
 
@@ -243,8 +264,8 @@ class GPT(nn.Module):
         dropout: Optional[float] = None,
     ):
         """
-        Loads a pretrained checkpoint from the transformers library using the original
-        OpenAI gpt2 weights. Useful for finetuning models without training from scratch.
+        Load a pretrained checkpoint using the original OpenAI gpt2 weights.
+        Useful for finetuning models without training from scratch.
 
         Parameters
         ----------
@@ -288,12 +309,13 @@ class GPT(nn.Module):
         huggingface_model = GPT2LMHeadModel.from_pretrained(checkpoint)
         pretrained_state_dict = huggingface_model.state_dict()
 
-        # Need to copy all of the parameters from the huggingface model to the local model
-        # this is why the variable names must match (see constructor)
-        # Have to do some augmentation to handle some choices that do not really make sense to use here
+        # Need to copy all of the parameters from the huggingface model to the model.
+        # This is why the variable names must match (see constructor)
+        # Have to do some augmentation to handle some choices
+        # that do not really make sense to use here.
         # For example:
-        # The OpenAI implementation uses one dimensional convolutions instead of linear layers
-        # for fully connected layers. Will have to adjust this.
+        # The OpenAI implementation uses one dimensional convolutions
+        # instead of linear layers, for fully connected layers.
         # Also, do not care about the maksed_bias on the attention layers
         layer_names = [layer_name for layer_name in pretrained_state_dict]
         layers_to_augment = [
@@ -309,7 +331,8 @@ class GPT(nn.Module):
                 continue
 
             if any(layer_name.endswith(w) for w in layers_to_augment):
-                # The aforementioned 1D convolutions need to be transposed to act as a linear layer
+                # The aforementioned 1D convolutions need to be transposed
+                # to act as a linear layer
                 assert (
                     pretrained_state_dict[layer_name].shape[::-1]
                     == state_dict[layer_name].shape
@@ -329,7 +352,7 @@ class GPT(nn.Module):
 
     def crop_block_size(self, block_size: int):
         """
-        Taken from karpathy's nanoGPT: https://github.com/karpathy/nanoGPT
+        Taken from karpathy's nanoGPT: https://github.com/karpathy/nanoGPT.
         this enables loading a larger model checkpoint's weights and then shrinking
         the size of the transformer blocks. This is useful for fine tuning on small
         datasets and simpler objectives.
@@ -338,6 +361,7 @@ class GPT(nn.Module):
         ----------
         block_size
             The new block size to shrink to
+
         """
         assert block_size <= self.block_size, "Cannot crop to a larger block size"
         self.block_size = block_size
