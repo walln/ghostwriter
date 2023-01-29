@@ -1,1 +1,10 @@
 .venv
+*.bin
+*.txt
+*.json
+__pycache__
+*.pt
+.env
+checkpoints
+*.pkl
+.ruff_cache
