@@ -1,33 +1,27 @@
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    # Ruff version.
-    rev: "v0.0.237"
+  - repo: local
     hooks:
-      - id: ruff
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: https://github.com/psf/black
-    rev: 22.12.0
-    hooks:
-      - id: black
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.40.0
-    hooks:
-      - id: commitizen
-      - id: commitizen-branch
-        stages: [push]
-  - repo: https://github.com/econchick/interrogate
-    rev: 1.5.0
-    hooks:
-      - id: interrogate
-        args: [--fail-under=80, --verbose]
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.1.1
-    hooks:
-      - id: pydocstyle
-        args:
-          - --ignore=D107,D204,D212,D205,D203,D402
+      - id: lint
+        name: lint
+        entry: rye lint
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: format
+        name: format
+        entry: rye format --check
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: test
+        name: test
+        entry: rye test
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: commit-msg
+        name: conventional-commit-messages
+        language: pygrep
+        entry: "^(chore|test|feat|fix|build|docs|refactor)!?:.*$"
+        args: [--multiline, --negate] # fails if the entry is NOT matched
+        stages: [commit-msg]

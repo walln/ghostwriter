@@ -8,3 +8,5 @@ __pycache__
 checkpoints
 *.pkl
 .ruff_cache
+output-dataset
+output-model
