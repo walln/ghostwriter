@@ -1,7 +1,6 @@
 """Command to generate lyrics using the PEFT model."""
 
 import torch
-import typer
 from ghostwriter.model.common import (
     MODEL_OUTPUT_DIR,
     SYSTEM_PROMPT,
@@ -11,6 +10,7 @@ from ghostwriter.model.common import (
 from peft.auto import AutoPeftModelForCausalLM
 from peft.peft_model import PeftModelForCausalLM
 from rich.console import Console
+from rich.prompt import Confirm
 from transformers import AutoTokenizer, pipeline
 from transformers import logging as transformers_logging
 
@@ -28,8 +28,10 @@ def generate_lyrics_command():
     artist_name = get_artist_name()
     console.print(f"Generating lyrics for artist: {artist_name}")
 
-    user_message = typer.prompt(
-        "What instructions should the model follow when generating lyrics?"
+    user_message = Confirm.get_input(
+        console,
+        "What instructions should the model follow when generating lyrics?",
+        password=False,
     )
     user_message = user_message.strip() if user_message else "Write a song about love."
 
@@ -100,5 +102,5 @@ def generate_lyrics_command():
         )
 
     assert isinstance(outputs, list)
-    typer.echo("Generated lyrics:\n" + 100 * "-")
-    typer.echo(outputs[0]["generated_text"][len(prompt) :].strip())
+    console.rule("Generated Lyrics")
+    console.print(outputs[0]["generated_text"][len(prompt) :].strip())
