@@ -1,7 +1,6 @@
 """QLoRA training script."""
 
 import torch
-import typer
 from datasets import Dataset
 from ghostwriter.dataset.common import DATASET_OUTPUT_DIR
 from ghostwriter.model.common import (
@@ -9,16 +8,27 @@ from ghostwriter.model.common import (
     MODEL_OUTPUT_DIR,
     SYSTEM_PROMPT,
     USER_PROMPT,
+    get_latest_checkpoint,
 )
 from peft.mapping import get_peft_model
 from peft.tuners.lora import LoraConfig
+from peft.utils.other import prepare_model_for_kbit_training
+from rich.console import Console
+from rich.prompt import Confirm
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
 )
+from transformers import logging as transformers_logging
 from trl import SFTTrainer, setup_chat_format
+from trl.trainer.utils import RichProgressCallback
+
+transformers_logging.set_verbosity(transformers_logging.CRITICAL)
+transformers_logging.disable_progress_bar()
+
+max_seq_length = 1024
 
 training_arguments = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,  # directory to save and repository id
@@ -65,41 +75,63 @@ bnb_config = BitsAndBytesConfig(
 
 def train_qlora_model_command():
     """Train a QLoRA model."""
+    console = Console()
+
     # Load the dataset
     dataset = Dataset.load_from_disk(DATASET_OUTPUT_DIR)
     dataset_info = dataset.info
-    typer.echo(f"Dataset name: {dataset_info.dataset_name}")
-    typer.echo(f"Dataset description: {dataset_info.description}")
-    typer.echo(f"Dataset size: {len(dataset)}")
 
-    train_dataset = dataset.map(
-        create_conversation, remove_columns=dataset.column_names, batched=False
-    )
+    console.rule("Dataset Information")
+    console.print(f"Dataset name: {dataset_info.dataset_name}")
+    console.print(f"Dataset description: {dataset_info.description}")
+    console.print(f"Dataset size: {len(dataset)}")
 
-    # Load model and tokenizer
-    model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL_ID,
-        device_map="auto",
-        # attn_implementation="flash_attention_2",
-        torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config,
-        use_cache=False,
-    )
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
-    tokenizer.padding_side = "right"  # to prevent warnings
+    # Check if a model already exists
+    try:
+        checkpoint = get_latest_checkpoint(MODEL_OUTPUT_DIR)
+    except FileNotFoundError:
+        checkpoint = None
 
-    model, tokenizer = setup_chat_format(model, tokenizer)  # type: ignore
+    if checkpoint:
+        overwrite = Confirm.ask(
+            f"A model already exists in {MODEL_OUTPUT_DIR}. Do you want to overwrite it?"
+        )
+        if not overwrite:
+            console.print("Exiting.")
+            return
 
-    from peft.utils.other import prepare_model_for_kbit_training
+    console.rule("Setting up training environment")
 
-    model = prepare_model_for_kbit_training(
-        model, gradient_checkpointing_kwargs={"use_reentrant": False}
-    )
+    with console.status("[bold green]Creating conversation examples"):
+        train_dataset = dataset.map(
+            create_conversation, remove_columns=dataset.column_names, batched=False
+        )
+    console.print("Created conversation examples.")
+    console.print(f"Number of examples: {len(train_dataset)}")
 
-    # # set chat template to OAI chatML, remove if you start from a fine-tuned model
-    # model, tokenizer = setup_chat_format(model, tokenizer)
+    with console.status("[bold cyan]Loading model"):
+        model = AutoModelForCausalLM.from_pretrained(
+            BASE_MODEL_ID,
+            device_map="auto",
+            # attn_implementation="flash_attention_2",
+            torch_dtype=torch.bfloat16,
+            quantization_config=bnb_config,
+            use_cache=False,
+        )
+    console.print("Base model loaded")
 
-    quantized_model = get_peft_model(model, peft_config)
+    with console.status("[bold pink]Setting up chat format"):
+        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
+        tokenizer.padding_side = "right"  # to prevent warnings
+    console.print("Loaded tokenizer.")
+
+    with console.status("[bold blue]Setting up chat format and peft training"):
+        model, tokenizer = setup_chat_format(model, tokenizer)  # type: ignore
+        model = prepare_model_for_kbit_training(
+            model, gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
+        quantized_model = get_peft_model(model, peft_config)
+    console.print("PEFT model created and ready for training.")
 
     trainer = SFTTrainer(
         model=quantized_model,
@@ -112,15 +144,20 @@ def train_qlora_model_command():
             "add_special_tokens": False,  # We template with special tokens
             "append_concat_token": False,  # No need to add additional separator token
         },
-        max_seq_length=1024,
+        max_seq_length=max_seq_length,
+        callbacks=[RichProgressCallback()],
         # neftune_noise_alpha=5,
     )
 
+    console.print("Initialized SFTTrainer.")
+    console.print(f"Model will be saved to {MODEL_OUTPUT_DIR}")
+
+    console.rule("Training QLoRA Model")
     # start training, the model will be automatically saved to the hub and the output directory
     trainer.train()  # type: ignore Broken types in TRL
 
-    typer.echo("Training complete.")
-    typer.echo(f"Model saved to {MODEL_OUTPUT_DIR}")
+    console.print("[bold green]Training complete.")
+    console.print(f"[bold purple]Model saved to {MODEL_OUTPUT_DIR}")
 
 
 def create_conversation(sample):

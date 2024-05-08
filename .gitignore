@@ -9,4 +9,6 @@ checkpoints
 *.pkl
 .ruff_cache
 output-dataset
+output-dataset-*
 output-model
+output-model-*
