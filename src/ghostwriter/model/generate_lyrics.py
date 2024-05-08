@@ -30,12 +30,10 @@ def generate_lyrics_command():
 
     user_message = Confirm.get_input(
         console,
-        "What instructions should the model follow when generating lyrics?",
+        "What instructions should the model follow when generating lyrics?\n",
         password=False,
     )
     user_message = user_message.strip() if user_message else "Write a song about love."
-
-    user_message = "Write a song about the problems in the music industry."
 
     with console.status("[bold green]Loading the tokenizer"):
         tokenizer = AutoTokenizer.from_pretrained(peft_model_id)
