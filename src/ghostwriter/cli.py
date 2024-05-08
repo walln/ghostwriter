@@ -1,18 +1,12 @@
 """Ghostwriter CLI."""
 
-import typer
 from ghostwriter.commands.generate_dataset import generate_dataset_command
 from ghostwriter.model.generate_lyrics import generate_lyrics_command
 from ghostwriter.model.train import train_qlora_model_command
+from typer import Typer
 from typing_extensions import Annotated
 
-app = typer.Typer()
-
-
-@app.command()
-def main(name: str):
-    """CLI app to enable training and interacting with models and datasets."""
-    typer.echo(f"Hello {name}")
+app = Typer()
 
 
 @app.command()

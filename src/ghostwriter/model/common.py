@@ -45,6 +45,9 @@ def get_artist_name():
     """
     dataset_info_path = os.path.join(DATASET_OUTPUT_DIR, "dataset_info.json")
 
+    if not os.path.exists(dataset_info_path):
+        raise FileNotFoundError("Dataset info file not found.")
+
     # Load the dataset info
     with open(dataset_info_path) as f:
         dataset_info = json.load(f)
