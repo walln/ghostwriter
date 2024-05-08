@@ -3,9 +3,9 @@
 from datasets import Dataset
 from ghostwriter.dataset.common import DATASET_OUTPUT_DIR
 from ghostwriter.dataset.scrape_lyrics import (
-    _get_artist_information,
-    _get_lyrics_for_songs,
-    _get_songs_for_artist,
+    get_artist_information,
+    get_lyrics_for_songs,
+    get_songs_for_artist,
 )
 from ghostwriter.model.common import get_artist_name
 from rich.console import Console
@@ -40,13 +40,13 @@ def generate_dataset_command(artist: str):
     console.print(f"Generating dataset for artist: {artist}")
 
     # First locate the artist id
-    artist_info = _get_artist_information(artist)
-    songs = _get_songs_for_artist(artist_info["artist_id"])
+    artist_info = get_artist_information(artist)
+    songs = get_songs_for_artist(artist_info["artist_id"])
     console.print(f"Found {len(songs)} song(s) for {artist_info['artist_name']}.")
-    _get_lyrics_for_songs(songs)
+    get_lyrics_for_songs(songs)
 
     dataset = Dataset.from_generator(
-        _get_lyrics_for_songs, gen_kwargs={"songs": songs}, num_proc=16
+        get_lyrics_for_songs, gen_kwargs={"songs": songs}, num_proc=16
     )
     assert isinstance(dataset, Dataset)
 
