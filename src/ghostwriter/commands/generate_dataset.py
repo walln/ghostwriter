@@ -18,7 +18,6 @@ def generate_dataset_command(artist: str):
     Args:
       artist: The name of the artist to search lyrics for.
     """
-    # TODO: Check if a dataset already exists and warn the user it will be overwritten
     console = Console()
     console.print(
         "This command will generate a dataset from the lyrics of a given artist."

@@ -70,9 +70,6 @@ bnb_config = BitsAndBytesConfig(
 # TODO: Use HQQ quantization
 
 
-# TODO: mute huggingface logging and use Rich for logging
-
-
 def train_qlora_model_command():
     """Train a QLoRA model."""
     console = Console()
