@@ -22,11 +22,18 @@ def get_latest_checkpoint(checkpoint_dir: str):
         The path to the latest checkpoint directory.
     """
     # List all the directories in the checkpoint directory
-    all_subdirs = [
-        os.path.join(checkpoint_dir, d)
-        for d in os.listdir(checkpoint_dir)
-        if os.path.isdir(os.path.join(checkpoint_dir, d))
-    ]
+    all_subdirs = (
+        [
+            os.path.join(checkpoint_dir, d)
+            for d in os.listdir(checkpoint_dir)
+            if os.path.isdir(os.path.join(checkpoint_dir, d))
+        ]
+        if os.path.exists(checkpoint_dir)
+        else []
+    )
+
+    if not all_subdirs:
+        raise FileNotFoundError("No checkpoints found in the directory.")
 
     # Filter directories that follow the 'checkpoint-X' pattern
     checkpoint_subdirs = [d for d in all_subdirs if d.split("-")[-1].isdigit()]
