@@ -58,6 +58,9 @@ def generate_dataset_command(artist: str):
         lambda example: example["lyrics"] is not None and example["error"] == "NONE"
     )
 
+    # TODO: More advanced data cleaning (remove weird html tags and scraping artifacts)
+    # semantic filtering with a small model.
+
     dataset._info.description = f"Lyrics dataset for {artist_info["artist_name"]}"
     dataset._info.dataset_name = f"{artist_info["artist_name"]}_lyrics"
     dataset.save_to_disk(DATASET_OUTPUT_DIR)
