@@ -50,6 +50,7 @@ training_arguments = TrainingArguments(
     # report_to="tensorboard",  # report metrics to tensorboard
 )
 
+# TODO: I think lower r is still fine the tuning is working well for even really small datasets
 peft_config = LoraConfig(
     lora_alpha=8,
     # lora_dropout=0.05,
@@ -60,7 +61,6 @@ peft_config = LoraConfig(
     task_type="CAUSAL_LM",
 )
 
-# BitsAndBytesConfig int-4 config
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_use_double_quant=True,

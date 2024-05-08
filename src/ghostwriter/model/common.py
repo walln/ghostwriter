@@ -78,4 +78,5 @@ ARTIST:
 
 USER_PROMPT = """Generate the lyrics a song titled: {song_name}"""
 
+# TODO: Allow user to override the base model ID (this is small enough for most consumer GPUs - only needs 10~GB of VRAM for int4 training)
 BASE_MODEL_ID = "abideen/gemma-2b-openhermes"  # "NousResearch/Hermes-2-Pro-Llama-3-8B" or `mistralai/Mistral-7B-v0.1`
